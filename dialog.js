@@ -48,8 +48,10 @@ Dialog.prototype._stripBotName = function (text) {
   else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
 
   this.robot.logger.info('nameStrip',nameStrip);
+  
+  var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
 
-  var len = !!nameStrip ? nameStart + nameStrip.length : 0;
+  this.robot.logger.info('len',len);
 
   // handle situations where someone answers a question with the bot name, which could legitimately happen
   if (text.length == nameStrip.length)
