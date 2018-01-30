@@ -38,20 +38,12 @@ Dialog.prototype._stripBotName = function (text) {
   var nameStart = text.charAt(0) === '@' ? 1 : 0;
   var nameStrip;
 
-  this.robot.logger.info('nameStart',nameStart);
-  this.robot.logger.info('text',text);
-  this.robot.logger.info('this.robot.name',this.robot.name);
-
   if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
   else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
   else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
   else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
-
-  this.robot.logger.info('nameStrip',nameStrip);
   
   var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
-
-  this.robot.logger.info('len',len);
 
   // handle situations where someone answers a question with the bot name, which could legitimately happen
   if (nameStrip && text.length == nameStrip.length)
@@ -59,7 +51,7 @@ Dialog.prototype._stripBotName = function (text) {
 
   if (text.charAt(len) === ':') len += 1;
 
-  return text.substring(len).trim()
+  return text.substring(len).trim();
 };
 
 
