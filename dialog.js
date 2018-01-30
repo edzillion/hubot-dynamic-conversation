@@ -38,6 +38,11 @@ Dialog.prototype._stripBotName = function (text) {
   var nameStart = text.charAt(0) === '@' ? 1 : 0;
   var nameStrip;
 
+  this.robot.logger.info('nameStart',nameStart);
+  this.robot.logger.info('text',text);
+  this.robot.logger.info('this.robot.name',this.robot.name);
+  this.robot.logger.info('this.robot.alias',this.robot.alias);
+
   if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
   else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
   else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
