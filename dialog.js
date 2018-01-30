@@ -41,7 +41,6 @@ Dialog.prototype._stripBotName = function (text) {
   this.robot.logger.info('nameStart',nameStart);
   this.robot.logger.info('text',text);
   this.robot.logger.info('this.robot.name',this.robot.name);
-  this.robot.logger.info('this.robot.alias',this.robot.alias);
 
   if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
   else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
