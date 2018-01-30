@@ -54,7 +54,7 @@ Dialog.prototype._stripBotName = function (text) {
   this.robot.logger.info('len',len);
 
   // handle situations where someone answers a question with the bot name, which could legitimately happen
-  if (text.length == nameStrip.length)
+  if (nameStrip && text.length == nameStrip.length)
     return text;
 
   if (text.charAt(len) === ':') len += 1;
