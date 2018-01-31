@@ -72,6 +72,35 @@ Dialog.prototype._stripBotName = function (text) {
  */
 Dialog.prototype._invokeDialog = function (message, done) {
   var self = this;
+  
+  if (message.dynamic) {
+    
+    let dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
+    let dynamicQuestions = message[dynamicChoice];
+    
+    if (dynamicQuestions instanceof Array) {
+
+      let seriesCallbacks = [];  
+      for (let i = 0; i < dynamicQuestions.length; i++) {
+        (function (currIndex) {
+          var dynaQ = dynamicQuestions[currIndex];
+          seriesCallbacks.push(function (done) {
+            self._invokeDialog(dynaQ, done);
+          });
+        })(i);
+      }
+
+      series(seriesCallbacks, function (res) {     
+        console.log('series done');
+        done();
+      });
+    }
+    else {
+      self._invokeDialog(dynamicQuestions, done);
+    }
+    return;
+  }
+
   var question = message.question.trim();
   var code = question.charCodeAt(question.length - 1);
 
