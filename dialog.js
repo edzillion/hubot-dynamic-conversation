@@ -147,6 +147,48 @@ Dialog.prototype._invokeDialog = function (message, done) {
     });
   }
 
+  if (message.answer.type === 'series') {
+    self.dialog.addChoice(/([2-9])/i, function (dialogMessage) {
+
+      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
+      var numOptions = Number(dialogMessage.message.text);
+      var firstLetter = 'A'; 
+      var seriesQuestions = [];  
+
+      for (var i=0, charCode=firstLetter.charCodeAt(0); i<numOptions; i++, charCode++) {
+        seriesQuestions.push(
+          {
+            question: "Enter option "+String.fromCharCode(charCode)+":",
+            answer: {
+              type: "text"
+            },
+            required: true
+          }
+        );  
+      }
+
+      var seriesCallbacks = [];  
+      for (var i = 0; i < seriesQuestions.length; i++) {
+        (function (currIndex) {
+          var seriesQ = seriesQuestions[currIndex];
+          seriesCallbacks.push(function (done) {
+            self._invokeDialog(seriesQ, done);
+          });
+        })(i);
+      }
+
+      series(seriesCallbacks, function (res) {     
+        done();
+      });
+    });
+
+    self.dialog.addChoice(/(.*)/i, function (dialogMessage) {
+      dialogMessage.reply(message.error);
+      self.msg = dialogMessage;
+      self._invokeDialog(message, done);
+    });
+  }
+
   if (message.answer.type === 'attachment') {
     self.dialog.addChoice(/.*/, function (dialogMessage) {
       if (dialogMessage.message.attachment && dialogMessage.message.attachment.type === 'image') {
@@ -200,15 +242,31 @@ Dialog.prototype.start = function () {
   if (self.messageOptions.abortKeyword) self.msg.reply('You can cancel this conversation with [' + self.messageOptions.abortKeyword + '].');
   // call the callbacks in series
   // emit 'end' when all is done or an error occurs
-  series(cbs, function (err) {
+  series(cbs, function (res) {
     self.data.dateTime = new Date();
+    if (res == 'break-series') {
+      console.log('dd');
+    }
 
     if (!self.data.aborted && self.messageOptions.onCompleteMessage)
       self.msg.reply(self.messageOptions.onCompleteMessage);
 
-    return self.emit('end', err, self.msg);
+    return self.emit('end', res, self.msg);
   });
 };
+
+
+/**
+ * Starts the dialog with the user
+ * @return {null}
+ * @api public
+ */
+Dialog.prototype.update = function (res) {
+  console.log(res);
+
+};
+
+
 
 Dialog.TIMEOUT = 500 * 1000;
 
