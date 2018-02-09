@@ -64,13 +64,16 @@ util.inherits(Dialog, EventEmitter);
  *         type: 'text'
  *       },
  *       required: false,
- *       error: 'Sorry, did not understand response'
+ *       error: '
+ * Sorry, did not understand response'
  *     }
  * @param  {Function} done    The function provided by async-series to call the next dialog message
  * @return {null}
  * @api private
  */
 Dialog.prototype._invokeDialog = function (message, done) {
+
+  console.log(message);
   var self = this;
   var question = message.question.trim();
   var code = question.charCodeAt(question.length - 1);
