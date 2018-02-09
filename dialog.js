@@ -75,13 +75,13 @@ Dialog.prototype._invokeDialog = function (message, done) {
   
   if (message.dynamic) {
     
-    let dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
-    let dynamicQuestions = message[dynamicChoice];
+    var dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
+    var dynamicQuestions = message[dynamicChoice];
     
     if (dynamicQuestions instanceof Array) {
 
-      let seriesCallbacks = [];  
-      for (let i = 0; i < dynamicQuestions.length; i++) {
+      var seriesCallbacks = [];  
+      for (var i = 0; i < dynamicQuestions.length; i++) {
         (function (currIndex) {
           var dynaQ = dynamicQuestions[currIndex];
           seriesCallbacks.push(function (done) {
