@@ -28,31 +28,31 @@ function Dialog(switchBoard, msg, messageOptions, robot) {
 }
 util.inherits(Dialog, EventEmitter);
 
-/**
- * Strip the bot's name from the description text
- * @param  {String} text
- * @return {String}
- * Implemented from https://github.com/timkinnane/hubot-rocketchat-announcement/blob/master/src/rocketchat-announcement.coffee#L46-L54
- */
-Dialog.prototype._stripBotName = function (text) {
-  var nameStart = text.charAt(0) === '@' ? 1 : 0;
-  var nameStrip;
+// /**
+//  * Strip the bot's name from the description text
+//  * @param  {String} text
+//  * @return {String}
+//  * Implemented from https://github.com/timkinnane/hubot-rocketchat-announcement/blob/master/src/rocketchat-announcement.coffee#L46-L54
+//  */
+// Dialog.prototype._stripBotName = function (text) {
+//   var nameStart = text.charAt(0) === '@' ? 1 : 0;
+//   var nameStrip;
 
-  if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
-  else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
-  else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
-  else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
+//   if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
+//   else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
+//   else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
+//   else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
   
-  var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
+//   var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
 
-  // handle situations where someone answers a question with the bot name, which could legitimately happen
-  if (nameStrip && text.length == nameStrip.length)
-    return text;
+//   // handle situations where someone answers a question with the bot name, which could legitimately happen
+//   if (nameStrip && text.length == nameStrip.length)
+//     return text;
 
-  if (text.charAt(len) === ':') len += 1;
+//   if (text.charAt(len) === ':') len += 1;
 
-  return text.substring(len).trim();
-};
+//   return text.substring(len).trim();
+// };
 
 
 /**
@@ -120,7 +120,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
         self.dialog.addChoice(option.match, function (dialogMessage) {
           dialogMessage.reply(option.response);
-          updateAnswers('value', self._stripBotName(dialogMessage.message.text));
+          updateAnswers('value', dialogMessage.message.text);
 
           if (!option.valid) {
             return done(new Error('User provided an invalid response'));
@@ -141,7 +141,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
   if (message.answer.type === 'text') {
     self.dialog.addChoice(/^(?!\s*$).+/i, function (dialogMessage) {
-      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
+      updateAnswers('value', dialogMessage.message.text);
       self.msg = dialogMessage;
       done();
     });
