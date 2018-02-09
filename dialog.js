@@ -28,31 +28,31 @@ function Dialog(switchBoard, msg, messageOptions, robot) {
 }
 util.inherits(Dialog, EventEmitter);
 
-// /**
-//  * Strip the bot's name from the description text
-//  * @param  {String} text
-//  * @return {String}
-//  * Implemented from https://github.com/timkinnane/hubot-rocketchat-announcement/blob/master/src/rocketchat-announcement.coffee#L46-L54
-//  */
-// Dialog.prototype._stripBotName = function (text) {
-//   var nameStart = text.charAt(0) === '@' ? 1 : 0;
-//   var nameStrip;
+/**
+ * Strip the bot's name from the description text
+ * @param  {String} text
+ * @return {String}
+ * Implemented from https://github.com/timkinnane/hubot-rocketchat-announcement/blob/master/src/rocketchat-announcement.coffee#L46-L54
+ */
+Dialog.prototype._stripBotName = function (text) {
+  var nameStart = text.charAt(0) === '@' ? 1 : 0;
+  var nameStrip;
 
-//   if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
-//   else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
-//   else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
-//   else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
+  if (text.indexOf(this.robot.name) === nameStart) nameStrip = this.robot.name;
+  else if (text.indexOf(this.robot.alias) === nameStart) nameStrip = this.robot.alias;
+  else if (text.indexOf('Hubot') === nameStart) nameStrip = 'Hubot';
+  else if (text.indexOf('hubot') === nameStart) nameStrip = 'hubot';
   
-//   var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
+  var len = (nameStrip === undefined) ? 0 : nameStart + nameStrip.length;
 
-//   // handle situations where someone answers a question with the bot name, which could legitimately happen
-//   if (nameStrip && text.length == nameStrip.length)
-//     return text;
+  // handle situations where someone answers a question with the bot name, which could legitimately happen
+  if (nameStrip && text.length == nameStrip.length)
+    return text;
 
-//   if (text.charAt(len) === ':') len += 1;
+  if (text.charAt(len) === ':') len += 1;
 
-//   return text.substring(len).trim();
-// };
+  return text.substring(len).trim();
+};
 
 
 /**
@@ -64,17 +64,43 @@ util.inherits(Dialog, EventEmitter);
  *         type: 'text'
  *       },
  *       required: false,
- *       error: '
- * Sorry, did not understand response'
+ *       error: 'Sorry, did not understand response'
  *     }
  * @param  {Function} done    The function provided by async-series to call the next dialog message
  * @return {null}
  * @api private
  */
 Dialog.prototype._invokeDialog = function (message, done) {
-
-  console.log(message);
   var self = this;
+  
+  if (message.dynamic) {
+    
+    let dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
+    let dynamicQuestions = message[dynamicChoice];
+    
+    if (dynamicQuestions instanceof Array) {
+
+      let seriesCallbacks = [];  
+      for (let i = 0; i < dynamicQuestions.length; i++) {
+        (function (currIndex) {
+          var dynaQ = dynamicQuestions[currIndex];
+          seriesCallbacks.push(function (done) {
+            self._invokeDialog(dynaQ, done);
+          });
+        })(i);
+      }
+
+      series(seriesCallbacks, function (res) {     
+        console.log('series done');
+        done();
+      });
+    }
+    else {
+      self._invokeDialog(dynamicQuestions, done);
+    }
+    return;
+  }
+
   var question = message.question.trim();
   var code = question.charCodeAt(question.length - 1);
 
@@ -123,7 +149,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
         self.dialog.addChoice(option.match, function (dialogMessage) {
           dialogMessage.reply(option.response);
-          updateAnswers('value', dialogMessage.message.text);
+          updateAnswers('value', self._stripBotName(dialogMessage.message.text));
 
           if (!option.valid) {
             return done(new Error('User provided an invalid response'));
@@ -144,9 +170,51 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
   if (message.answer.type === 'text') {
     self.dialog.addChoice(/^(?!\s*$).+/i, function (dialogMessage) {
-      updateAnswers('value', dialogMessage.message.text);
+      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
       self.msg = dialogMessage;
       done();
+    });
+  }
+
+  if (message.answer.type === 'series') {
+    self.dialog.addChoice(/([2-9])/i, function (dialogMessage) {
+
+      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
+      var numOptions = Number(dialogMessage.message.text);
+      var firstLetter = 'A'; 
+      var seriesQuestions = [];  
+
+      for (var i=0, charCode=firstLetter.charCodeAt(0); i<numOptions; i++, charCode++) {
+        seriesQuestions.push(
+          {
+            question: "Enter option "+String.fromCharCode(charCode)+":",
+            answer: {
+              type: "text"
+            },
+            required: true
+          }
+        );  
+      }
+
+      var seriesCallbacks = [];  
+      for (var i = 0; i < seriesQuestions.length; i++) {
+        (function (currIndex) {
+          var seriesQ = seriesQuestions[currIndex];
+          seriesCallbacks.push(function (done) {
+            self._invokeDialog(seriesQ, done);
+          });
+        })(i);
+      }
+
+      series(seriesCallbacks, function (res) {     
+        done();
+      });
+    });
+
+    self.dialog.addChoice(/(.*)/i, function (dialogMessage) {
+      dialogMessage.reply(message.error);
+      self.msg = dialogMessage;
+      self._invokeDialog(message, done);
     });
   }
 
@@ -203,15 +271,31 @@ Dialog.prototype.start = function () {
   if (self.messageOptions.abortKeyword) self.msg.reply('You can cancel this conversation with [' + self.messageOptions.abortKeyword + '].');
   // call the callbacks in series
   // emit 'end' when all is done or an error occurs
-  series(cbs, function (err) {
+  series(cbs, function (res) {
     self.data.dateTime = new Date();
+    if (res == 'break-series') {
+      console.log('dd');
+    }
 
     if (!self.data.aborted && self.messageOptions.onCompleteMessage)
       self.msg.reply(self.messageOptions.onCompleteMessage);
 
-    return self.emit('end', err, self.msg);
+    return self.emit('end', res, self.msg);
   });
 };
+
+
+/**
+ * Starts the dialog with the user
+ * @return {null}
+ * @api public
+ */
+Dialog.prototype.update = function (res) {
+  console.log(res);
+
+};
+
+
 
 Dialog.TIMEOUT = 500 * 1000;
 
