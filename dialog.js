@@ -72,14 +72,14 @@ Dialog.prototype._stripBotName = function (text) {
  */
 Dialog.prototype._invokeDialog = function (message, done) {
   var self = this;
-  
+  console.log('message:',message);
   if (message.dynamic) {
     
     var dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
     var dynamicQuestions = message[dynamicChoice];
     
     if (dynamicQuestions instanceof Array) {
-
+      console.log('dynamicQuestions:',dynamicQuestions);
       var seriesCallbacks = [];  
       for (var i = 0; i < dynamicQuestions.length; i++) {
         (function (currIndex) {
@@ -91,7 +91,6 @@ Dialog.prototype._invokeDialog = function (message, done) {
       }
 
       series(seriesCallbacks, function (res) {     
-        console.log('series done');
         done();
       });
     }
@@ -178,7 +177,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
   if (message.answer.type === 'series') {
     self.dialog.addChoice(/([2-9])/i, function (dialogMessage) {
-
+      console.log('dialogMessage',dialogMessage);
       updateAnswers('value', self._stripBotName(dialogMessage.message.text));
       var numOptions = Number(dialogMessage.message.text);
       var firstLetter = 'A'; 
@@ -205,7 +204,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
           });
         })(i);
       }
-
+      console.log('seriesCallbacks',seriesCallbacks);
       series(seriesCallbacks, function (res) {     
         done();
       });
