@@ -72,14 +72,13 @@ Dialog.prototype._stripBotName = function (text) {
  */
 Dialog.prototype._invokeDialog = function (message, done) {
   var self = this;
-  console.log('message:',message);
+
   if (message.dynamic) {
     
     var dynamicChoice = self.data.answers[message.fromQuestionIndex].response.value;
     var dynamicQuestions = message[dynamicChoice];
     
     if (dynamicQuestions instanceof Array) {
-      console.log('dynamicQuestions:',dynamicQuestions);
       var seriesCallbacks = [];  
       for (var i = 0; i < dynamicQuestions.length; i++) {
         (function (currIndex) {
@@ -183,7 +182,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
       var numOptions = Number(answer);
       var firstLetter = 'A'; 
       var seriesQuestions = [];  
-      console.log('dialogMessage',dialogMessage);
+
       for (var i=0, charCode=firstLetter.charCodeAt(0); i<numOptions; i++, charCode++) {
         seriesQuestions.push(
           {
@@ -205,7 +204,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
           });
         })(i);
       }
-      console.log('seriesCallbacks',seriesCallbacks);
+
       series(seriesCallbacks, function (res) {     
         done();
       });
@@ -273,26 +272,12 @@ Dialog.prototype.start = function () {
   // emit 'end' when all is done or an error occurs
   series(cbs, function (res) {
     self.data.dateTime = new Date();
-    if (res == 'break-series') {
-      console.log('dd');
-    }
 
     if (!self.data.aborted && self.messageOptions.onCompleteMessage)
       self.msg.reply(self.messageOptions.onCompleteMessage);
 
     return self.emit('end', res, self.msg);
   });
-};
-
-
-/**
- * Starts the dialog with the user
- * @return {null}
- * @api public
- */
-Dialog.prototype.update = function (res) {
-  console.log(res);
-
 };
 
 
