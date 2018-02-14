@@ -20,7 +20,8 @@ function Dialog(switchBoard, msg, messageOptions, robot) {
     source: '',
     dateTime: null,
     answers: [],
-    aborted: false
+    aborted: false,
+    skipped: []
   };
 
   this.data.source = msg.envelope.user;
@@ -123,6 +124,7 @@ Dialog.prototype._invokeDialog = function (message, done) {
   if (!message.required) {
     self.dialog.addChoice(/skip/i, function (dialogMessage) {
       dialogMessage.reply('Ok. we are skipping this section.');
+      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
       self.msg = dialogMessage;
       done();
     });
