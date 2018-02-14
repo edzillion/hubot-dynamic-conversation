@@ -177,12 +177,13 @@ Dialog.prototype._invokeDialog = function (message, done) {
 
   if (message.answer.type === 'series') {
     self.dialog.addChoice(/([2-9])/i, function (dialogMessage) {
-      console.log('dialogMessage',dialogMessage);
-      updateAnswers('value', self._stripBotName(dialogMessage.message.text));
-      var numOptions = Number(dialogMessage.message.text);
+      
+      var answer = self._stripBotName(dialogMessage.message.text);
+      updateAnswers('value', answer);
+      var numOptions = Number(answer);
       var firstLetter = 'A'; 
       var seriesQuestions = [];  
-
+      console.log('dialogMessage',dialogMessage);
       for (var i=0, charCode=firstLetter.charCodeAt(0); i<numOptions; i++, charCode++) {
         seriesQuestions.push(
           {
